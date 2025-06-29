@@ -1,0 +1,73 @@
+// Basic ALU in Verilog supporting ADD, SUB, AND, OR, NOT
+module alu (
+    input  [3:0] a,       // 4-bit input A
+    input  [3:0] b,       // 4-bit input B
+    input  [2:0] op,      // 3-bit operation selector
+    output reg [3:0] result, // 4-bit result
+    output reg carry_out     // Carry out for addition/subtraction
+);
+
+// Operation codes
+localparam ADD = 3'b000;
+localparam SUB = 3'b001;
+localparam AND_OP = 3'b010;
+localparam OR_OP  = 3'b011;
+localparam NOT_OP = 3'b100;
+
+always @(*) begin
+    carry_out = 0;
+    case (op)
+        ADD: {carry_out, result} = a + b;      // Addition with carry
+        SUB: {carry_out, result} = a - b;      // Subtraction with borrow as carry
+        AND_OP: result = a & b;                // AND
+        OR_OP:  result = a | b;                // OR
+        NOT_OP: result = ~a;                   // NOT (on A)
+        default: result = 4'b0000;
+    endcase
+end
+
+endmodule
+// Testbench for the basic ALU
+module alu_tb;
+    reg [3:0] a, b;
+    reg [2:0] op;
+    wire [3:0] result;
+    wire carry_out;
+
+    alu uut (
+        .a(a),
+        .b(b),
+        .op(op),
+        .result(result),
+        .carry_out(carry_out)
+    );
+
+    initial begin
+        $display("A\tB\tOP\tRESULT\tCARRY");
+        // ADD
+        a = 4'b0011; b = 4'b0001; op = 3'b000; #10;
+        $display("%b\t%b\tADD\t%b\t%b", a, b, result, carry_out);
+
+        // SUB
+        a = 4'b0101; b = 4'b0010; op = 3'b001; #10;
+        $display("%b\t%b\tSUB\t%b\t%b", a, b, result, carry_out);
+
+        // AND
+        a = 4'b1100; b = 4'b1010; op = 3'b010; #10;
+        $display("%b\t%b\tAND\t%b\t%b", a, b, result, carry_out);
+
+        // OR
+        a = 4'b1100; b = 4'b1010; op = 3'b011; #10;
+        $display("%b\t%b\tOR\t%b\t%b", a, b, result, carry_out);
+
+        // NOT
+        a = 4'b1100; b = 4'b0000; op = 3'b100; #10;
+        $display("%b\t%b\tNOT\t%b\t%b", a, b, result, carry_out);
+
+        // Default/Invalid
+        a = 4'b1111; b = 4'b1111; op = 3'b111; #10;
+        $display("%b\t%b\tINV\t%b\t%b", a, b, result, carry_out);
+
+        $finish;
+    end
+endmodule
